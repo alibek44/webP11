@@ -45,14 +45,7 @@ startServer();
 // GET /
 app.get("/", (req, res) => {
   res.json({
-    message: "Product API is running",
-    endpoints: {
-      getAll: "GET /api/products",
-      getById: "GET /api/products/:id",
-      create: "POST /api/products",
-      update: "PUT /api/products/:id",
-      delete: "DELETE /api/products/:id"
-    }
+    message: "Product API is running"
   });
 });
 
