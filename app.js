@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
-import itemsRouter from "./routes/items"; // Import routes
+import itemsRouter from "./routes/items.js"; // Import routes
 
 dotenv.config();
 
