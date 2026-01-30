@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
-import itemsRouter from "./routes/items.js"; // Importing routes
+import itemsRouter from "/routes/items.js"; // Import routes
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ async function startServer() {
     const itemsCollection = db.collection("items");
 
     // Set up routes
-    app.use("/api/items", itemsRouter); // Using items router
+    app.use("/api/items", itemsRouter); // This line ensures the /api/items route is active
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
