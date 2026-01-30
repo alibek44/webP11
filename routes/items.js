@@ -1,5 +1,4 @@
 // routes/items.js
-
 import express from "express";
 import {
   getAllItems,
@@ -12,7 +11,7 @@ import {
 
 const router = express.Router();
 
-// Define routes for items
+// Define routes
 router.get("/", getAllItems);
 router.get("/:id", getItemById);
 router.post("/", createItem);
@@ -20,4 +19,7 @@ router.put("/:id", updateItem);
 router.patch("/:id", partialUpdateItem);
 router.delete("/:id", deleteItem);
 
-export default router;
+export default function (db) {
+  // No need to reassign functions, just use them directly
+  return router;
+}

@@ -1,17 +1,10 @@
 // controllers/itemsController.js
-
 import { ObjectId } from "mongodb";
 
-let itemsCollection;
-
-export const initializeItems = (db) => {
-  itemsCollection = db.collection("items");
-};
-
 // Get all items
-export const getAllItems = async (req, res) => {
+export const getAllItems = (db) => async (req, res) => {
   try {
-    const items = await itemsCollection.find().toArray();
+    const items = await db.collection("items").find().toArray();
     res.status(200).json({ items });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch items" });
@@ -19,7 +12,7 @@ export const getAllItems = async (req, res) => {
 };
 
 // Get item by ID
-export const getItemById = async (req, res) => {
+export const getItemById = (db) => async (req, res) => {
   const { id } = req.params;
 
   if (!ObjectId.isValid(id)) {
@@ -27,10 +20,12 @@ export const getItemById = async (req, res) => {
   }
 
   try {
-    const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
+    const item = await db.collection("items").findOne({ _id: new ObjectId(id) });
+
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
     }
+
     res.status(200).json(item);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch item" });
@@ -38,40 +33,49 @@ export const getItemById = async (req, res) => {
 };
 
 // Create a new item
-export const createItem = async (req, res) => {
-  const { name, description, price, category } = req.body;
+export const createItem = (db) => async (req, res) => {
+  const { name, description, price } = req.body;
 
-  if (!name || !price || !category) {
+  if (!name || !description || !price) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  const newItem = { name, description, price, category };
+  const newItem = {
+    name,
+    description,
+    price,
+  };
 
   try {
-    const result = await itemsCollection.insertOne(newItem);
-    res.status(201).json({ message: "Item created", itemId: result.insertedId });
+    const result = await db.collection("items").insertOne(newItem);
+    res.status(201).json({
+      message: "Item created",
+      item: { _id: result.insertedId, ...newItem },
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to create item" });
   }
 };
 
 // Update an item (full update)
-export const updateItem = async (req, res) => {
+export const updateItem = (db) => async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, category } = req.body;
+  const { name, description, price } = req.body;
 
   if (!ObjectId.isValid(id)) {
     return res.status(400).json({ error: "Invalid item ID" });
   }
 
-  if (!name || !price || !category) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
+  const updatedItem = {
+    name,
+    description,
+    price,
+  };
 
   try {
-    const result = await itemsCollection.findOneAndUpdate(
+    const result = await db.collection("items").findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: { name, description, price, category } },
+      { $set: updatedItem },
       { returnDocument: "after" }
     );
 
@@ -79,25 +83,28 @@ export const updateItem = async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    res.status(200).json({ message: "Item updated", item: result.value });
+    res.status(200).json({
+      message: "Item updated",
+      item: result.value,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to update item" });
   }
 };
 
-// Partially update an item
-export const partialUpdateItem = async (req, res) => {
+// Partial update an item
+export const partialUpdateItem = (db) => async (req, res) => {
   const { id } = req.params;
-  const updateFields = req.body;
+  const updatedFields = req.body;
 
   if (!ObjectId.isValid(id)) {
     return res.status(400).json({ error: "Invalid item ID" });
   }
 
   try {
-    const result = await itemsCollection.findOneAndUpdate(
+    const result = await db.collection("items").findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: updateFields },
+      { $set: updatedFields },
       { returnDocument: "after" }
     );
 
@@ -105,14 +112,17 @@ export const partialUpdateItem = async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    res.status(200).json({ message: "Item partially updated", item: result.value });
+    res.status(200).json({
+      message: "Item partially updated",
+      item: result.value,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to partially update item" });
+    res.status(500).json({ error: "Failed to update item" });
   }
 };
 
 // Delete an item
-export const deleteItem = async (req, res) => {
+export const deleteItem = (db) => async (req, res) => {
   const { id } = req.params;
 
   if (!ObjectId.isValid(id)) {
@@ -120,13 +130,13 @@ export const deleteItem = async (req, res) => {
   }
 
   try {
-    const result = await itemsCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await db.collection("items").deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    res.status(204).send();
+    res.status(200).json({ message: "Item deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete item" });
   }

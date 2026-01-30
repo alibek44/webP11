@@ -21,11 +21,8 @@ async function startServer() {
     db = client.db("shop");
     console.log("Connected to MongoDB");
 
-    // Initialize items collection
-    const itemsCollection = db.collection("items");
-
-    // Set up routes
-    app.use("/api/items", itemsRouter); // This line ensures the /api/items route is active
+    // Use itemsRouter with the db instance passed as a parameter
+    app.use("/api/items", itemsRouter(db));
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
