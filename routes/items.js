@@ -20,6 +20,5 @@ router.patch("/:id", partialUpdateItem);
 router.delete("/:id", deleteItem);
 
 export default function (db) {
-  // No need to reassign functions, just use them directly
   return router;
 }
