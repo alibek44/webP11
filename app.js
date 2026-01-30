@@ -26,7 +26,24 @@ const Item = mongoose.model('Item', new mongoose.Schema({
   price: { type: Number, required: true },
 }));
 
-// GET /api/items – Retrieve all items
+// API Key middleware for protected routes
+const apiKey = process.env.API_KEY;  // You can store the key in the .env file
+
+// Middleware function to check for API key in the request headers
+const checkApiKey = (req, res, next) => {
+  const providedApiKey = req.headers['x-api-key'];  // Look for the key in the 'x-api-key' header
+  if (!providedApiKey) {
+    return res.status(401).json({ message: 'Unauthorized: API key missing' });
+  }
+
+  if (providedApiKey !== apiKey) {
+    return res.status(403).json({ message: 'Forbidden: Invalid API key' });
+  }
+
+  next();  // If the API key is valid, proceed to the next middleware or route handler
+};
+
+// GET /api/items – Retrieve all items (No protection, open for everyone)
 app.get('/api/items', async (req, res) => {
   try {
     const items = await Item.find();
@@ -36,7 +53,7 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-// GET /api/items/:id – Retrieve item by ID
+// GET /api/items/:id – Retrieve item by ID (No protection, open for everyone)
 app.get('/api/items/:id', async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
@@ -47,8 +64,8 @@ app.get('/api/items/:id', async (req, res) => {
   }
 });
 
-// POST /api/items – Create a new item
-app.post('/api/items', async (req, res) => {
+// POST /api/items – Create a new item (Protected)
+app.post('/api/items', checkApiKey, async (req, res) => {
   const { name, description, price } = req.body;
 
   if (!name || !price) {
@@ -64,8 +81,8 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
-// PUT /api/items/:id – Update an item (full update)
-app.put('/api/items/:id', async (req, res) => {
+// PUT /api/items/:id – Update an item (full update) (Protected)
+app.put('/api/items/:id', checkApiKey, async (req, res) => {
   try {
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedItem) return res.status(404).json({ message: 'Item not found' });
@@ -75,8 +92,8 @@ app.put('/api/items/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/items/:id – Update an item (partial update)
-app.patch('/api/items/:id', async (req, res) => {
+// PATCH /api/items/:id – Update an item (partial update) (Protected)
+app.patch('/api/items/:id', checkApiKey, async (req, res) => {
   try {
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedItem) return res.status(404).json({ message: 'Item not found' });
@@ -86,8 +103,8 @@ app.patch('/api/items/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/items/:id – Delete an item
-app.delete('/api/items/:id', async (req, res) => {
+// DELETE /api/items/:id – Delete an item (Protected)
+app.delete('/api/items/:id', checkApiKey, async (req, res) => {
   try {
     const deletedItem = await Item.findByIdAndDelete(req.params.id);
     if (!deletedItem) return res.status(404).json({ message: 'Item not found' });
@@ -104,7 +121,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const port = process.env.PORT || 3000;  // Use PORT environment variable or fallback to 3000
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
